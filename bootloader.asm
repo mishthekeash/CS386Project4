@@ -1,30 +1,38 @@
-; Your bootloader's job is to:
-
-; Read the program from the input device and store it in memory starting at address 1,024
-; Execute the program by jumping to address 1,024
-
-read r0
+; Initialize the register for base address of the program
 loadLiteral 1024 r1
 
-; if r1 =! 0, jump to loop
-;read every word and store it in memory starting at address 1024
-;when r1 = 0, jump to after loop
+; Read the size of the program in words
+read r0  ; Read first byte high byte
+shl r0 8 r0  ; Shift left by 8 bits to make room for the next byte
+read r2  ; Read second byte low byte
+or r0 r2 r0  ; Combine the two bytes to form the size
 
-loop:
-    read r3
-    load r3 r1
-    add 1 r1
-    sub 1 r0
-    loadLiteral 0 r4
-    add r4 .loop r4
+; Initialize the counter for the loop
+move r0 r3  ; Copy the size into r3 to use as a loop counter
 
-    ;leaves loop if r0 = 0
-    cmove r0 r4 r7
+; Reading the program into memory starting at address 1024
+load_program:
+    ; Each loop iteration reads one word
+    read r2  ; Read first byte of the word
+    shl r2 8 r2
+    read r4
+    or r2 r4 r2
+    shl r2 8 r2
+    read r4
+    or r2 r4 r2
+    shl r2 8 r2
+    read r4
+    or r2 r4 r2
 
+    store r2 r1  ; Store the word into the memory at address in r1
+    add r1 1 r1  ; Increment the memory address
+    sub r3 1 r3  ; Decrement the loop counter
 
-;if r0 =0 jump to afer loop
+    ; Check if the loop should continue
+    gt r3 0 r4   ; Check if we still have words to read
+    cmove r4 .load_program r7  ; If yes, continue loop
 
-after_loop: 
-    loadLiteral 1024 r7
-     
-  
+; Set the instruction pointer to start executing the loaded program
+loadLiteral 1024 r7
+
+halt  ; Optionally, end bootloader with a halt for safety
