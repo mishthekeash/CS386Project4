@@ -9,11 +9,15 @@ import "fmt"
 // The state kept by the CPU in order to implement kernel support.
 type kernelCpuState struct {
 	// TODO: Fill this in.
+
 }
 
 // The initial kernel state when the CPU boots.
 var initKernelCpuState = kernelCpuState{
 	// TODO: Fill this in.
+	//when cpu boots, kernel should be in a state where it can handle syscalls
+	//and other kernel operations
+
 }
 
 // A hook which is executed at the beginning of each instruction step.
@@ -28,6 +32,7 @@ var initKernelCpuState = kernelCpuState{
 // will immediately return without any further execution.
 func (k *kernelCpuState) preExecuteHook(c *cpu) (bool, error) {
 	// TODO: Fill this in.
+
 	return false, nil
 }
 
@@ -77,12 +82,36 @@ func init() {
 			name: "syscall",
 			cb: func(c *cpu, args [3]byte) error {
 				// TODO: Fill this in.
+				if args[0] == 0 {
+					// Read a byte from the input device and store it in the
+					// lowest byte of r6 (and set the other bytes of r6 to 0).
+					b := make([]byte, 1)
+					_, err := c.read.Read(b)
+					if err != nil {
+						return fmt.Errorf("failed to read from input device: %v", err)
+					}
+					c.registers[6] = word(b[0])
+				} else if args[0] == 1 {
+					// Write the lowest byte of r6 to the output device.
+					_, err := c.write.Write([]byte{byte(c.registers[6])})
+					if err != nil {
+						return fmt.Errorf("failed to write to output device: %v", err)
+					}
+				} else if args[0] == 2 {
+					// The program exits; print "Program has exited" and halt the machine.
+					_, err := c.write.Write([]byte("Program has exited\n"))
+					if err != nil {
+						return fmt.Errorf("failed to write to output device: %v", err)
+					}
+					c.halted = true
+				}
 				return fmt.Errorf("unimplemented")
 			},
 			validate: nil,
 		}
 
 		// TODO: Add other instructions that can be used to implement a kernel.
+
 	)
 
 	// Add kernel instructions to the instruction set.
