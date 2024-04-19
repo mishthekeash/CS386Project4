@@ -85,25 +85,31 @@ func init() {
 				if args[0] == 0 {
 					// Read a byte from the input device and store it in the
 					// lowest byte of r6 (and set the other bytes of r6 to 0).
+					//this
 					b := make([]byte, 1)
 					_, err := c.read.Read(b)
 					if err != nil {
 						return fmt.Errorf("failed to read from input device: %v", err)
 					}
 					c.registers[6] = word(b[0])
+					//to this needs to be in kernel.asm
 				} else if args[0] == 1 {
+					//this
 					// Write the lowest byte of r6 to the output device.
 					_, err := c.write.Write([]byte{byte(c.registers[6])})
 					if err != nil {
 						return fmt.Errorf("failed to write to output device: %v", err)
+					// to this in kernel.asm
 					}
 				} else if args[0] == 2 {
+					//this
 					// The program exits; print "Program has exited" and halt the machine.
 					_, err := c.write.Write([]byte("Program has exited\n"))
 					if err != nil {
 						return fmt.Errorf("failed to write to output device: %v", err)
 					}
 					c.halted = true
+					//to this needs to be in kernel.asm
 				}
 				return fmt.Errorf("unimplemented")
 			},
